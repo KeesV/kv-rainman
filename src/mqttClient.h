@@ -12,13 +12,13 @@ class MqttClient {
     Settings settings;
     WiFiClient espClient;
     PubSubClient mqttClient;
-    WateringStation* station1;
-    
+    std::vector<WateringStation*> wateringStations;
+
     unsigned long lastUpdated;
 
     public:
     MqttClient();
-    void Start(Settings& settings, WateringStation* station1);
+    void Start(Settings& settings, std::vector<WateringStation*> stations);
     void Handle();
 };
 

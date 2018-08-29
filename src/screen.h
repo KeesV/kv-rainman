@@ -12,11 +12,11 @@
 class Screen {
     public:
     Screen();
-    void Start(WateringStation* station1);
+    void Start(std::vector<WateringStation*> stations);
     void Handle();
 
     private:
-    WateringStation* station1;
+    std::vector<WateringStation*> wateringStations;
     Adafruit_SSD1306 display;
     void DisplayStationStatus(int stationNumber, bool status);
     void UpdateEntireScreen();

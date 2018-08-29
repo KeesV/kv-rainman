@@ -13,23 +13,26 @@ Settings settings;
 Screen screen;
 MqttClient mqttClient;
 
-std::vector<WateringStation> wateringStations{WateringStation()};
-
-WateringStation *station1 = new WateringStation();
+std::vector<WateringStation *> wateringStations{
+    new WateringStation(),
+    new WateringStation(),
+    new WateringStation(),
+    new WateringStation(),
+    new WateringStation(),
+    new WateringStation()};
 
 void setup()
 {
     Serial.begin(115200);
-    // pinMode(D0, OUTPUT);
-    // pinMode(D1, OUTPUT);
-    // pinMode(D2, OUTPUT);
-    // pinMode(D3, OUTPUT);
-    // pinMode(D4, OUTPUT);
-    // pinMode(D5, OUTPUT);
 
-    station1->Setup(1, D0);
+    wateringStations[0]->Setup(1, D0);
+    wateringStations[1]->Setup(2, D1);
+    wateringStations[2]->Setup(3, D2);
+    wateringStations[3]->Setup(4, D3);
+    wateringStations[4]->Setup(5, D4);
+    wateringStations[5]->Setup(6, D5);
 
-    screen.Start(station1);
+    screen.Start(wateringStations);
 
     /* Explicitly set the ESP8266 to be a WiFi-client, otherwise, it by default,
     would try to act as both a client and an access-point and could cause
@@ -52,7 +55,7 @@ void setup()
     Serial.println(WiFi.localIP());
 
     start_webserver(settings);
-    mqttClient.Start(settings, station1);
+    mqttClient.Start(settings, wateringStations);
 }
 
 void loop()
