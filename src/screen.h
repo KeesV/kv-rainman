@@ -5,19 +5,19 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#include "state.h"
+#include "wateringStation.h"
 
 #define OLED_RESET -1
 
 class Screen {
     public:
     Screen();
-    void Start(State& state);
+    void Start(WateringStation* station1);
     void Handle();
 
     private:
+    WateringStation* station1;
     Adafruit_SSD1306 display;
-    State state;
     void DisplayStationStatus(int stationNumber, bool status);
     void UpdateEntireScreen();
 };

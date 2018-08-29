@@ -3,24 +3,24 @@
 Screen::Screen() : display(OLED_RESET) {
 }
 
-void Screen::Start(State& state) {
-    this->state = state;
-
+void Screen::Start(WateringStation* station1) {
     // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
     // init done
     this->display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3D (for the 128x64)
     this->display.clearDisplay();
 
+    this->station1 = station1;
+
     this->UpdateEntireScreen();
 }
 
 void Screen::UpdateEntireScreen() {
-    this->DisplayStationStatus(1, this->state.GetStationStatus(1));
-    this->DisplayStationStatus(2, this->state.GetStationStatus(2));
-    this->DisplayStationStatus(3, this->state.GetStationStatus(3));
-    this->DisplayStationStatus(4, this->state.GetStationStatus(4));
-    this->DisplayStationStatus(5, this->state.GetStationStatus(5));
-    this->DisplayStationStatus(6, this->state.GetStationStatus(6));
+    this->DisplayStationStatus(1, this->station1->IsWatering());
+    this->DisplayStationStatus(2, false);
+    this->DisplayStationStatus(3, true);
+    this->DisplayStationStatus(4, false);
+    this->DisplayStationStatus(5, true);
+    this->DisplayStationStatus(6, false);
     
     this->display.display();
 }
@@ -39,9 +39,5 @@ void Screen::DisplayStationStatus(int stationNumber, bool status)
 }
 
 void Screen::Handle() {
-    if(this->state.WasUpdated()) {
-        Serial.println("Updating screen...");
-        this->UpdateEntireScreen();
-        this->state.UpdateProcessed();
-    }
+    this->UpdateEntireScreen();
 }
