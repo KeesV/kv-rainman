@@ -4,7 +4,7 @@ WateringStation::WateringStation() {
 }
 
 void WateringStation::Setup(int number, int pin) {
-    this->watering = ((number % 2 == 0) ? false : true);
+    this->watering = false;
     this->pin = pin;
     this->number = number;
 

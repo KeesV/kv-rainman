@@ -13,7 +13,8 @@ class MqttClient {
     WiFiClient espClient;
     PubSubClient mqttClient;
     std::vector<WateringStation*> wateringStations;
-    void messageReceivedCallback(char* topic, byte* payload, unsigned int length);
+    std::vector<bool> previousWateringStationStates;
+    void messageReceivedCallback(char* p_topic, byte* p_payload, unsigned int p_length);
     void mqttReconnect();
 
     unsigned long lastUpdated;
