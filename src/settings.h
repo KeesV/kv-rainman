@@ -53,7 +53,7 @@ class Settings
     void SetMqttStateTopicBase(String value);
     String GetMqttStateTopicBase();
     void SetMqttRetain(String value);
-    String GetMqttRetain();
+    bool GetMqttRetain();
     void SetMqttPayloadOn(String value);
     String GetMqttPayloadOn();
     void SetMqttPayloadOff(String value);

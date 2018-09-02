@@ -37,7 +37,7 @@ String indexProcessor(const String& key) {
     else if (key == "MqttBrokerPortValue") return "value=\""+lSettings.GetMqttBrokerPort()+"\"";
     else if (key == "MqttCommandTopicBaseValue") return "value=\""+lSettings.GetMqttCommandTopicBase()+"\"";
     else if (key == "MqttStateTopicBaseValue") return "value=\""+lSettings.GetMqttStateTopicBase()+"\"";
-    else if (key == "MqttRetainCheckedValue") return lSettings.GetMqttRetain() == "1" ? "CHECKED" : " ";
+    else if (key == "MqttRetainCheckedValue") return lSettings.GetMqttRetain() ? "CHECKED" : " ";
     else if (key == "MqttPayloadOnValue") return "value=\""+lSettings.GetMqttPayloadOn()+"\"";
     else if (key == "MqttPayloadOffValue") return "value=\""+lSettings.GetMqttPayloadOff()+"\"";
 

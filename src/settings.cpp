@@ -76,7 +76,7 @@ void Settings::Save() {
     saveToEeprom(this->GetMqttBrokerPort(), MqttBrokerPortStartAddr, MqttBrokerPortLength);
     saveToEeprom(this->GetMqttCommandTopicBase(), MqttCommandTopicBaseStartAddr, MqttCommandTopicBaseLength);
     saveToEeprom(this->GetMqttStateTopicBase(), MqttStateTopicBaseStartAddr, MqttStateTopicBaseLength);
-    saveToEeprom(this->GetMqttRetain(), MqttRetainStartAddr, MqttRetainLength);
+    saveToEeprom(this->GetMqttRetain() ? "1" : "0", MqttRetainStartAddr, MqttRetainLength);
     saveToEeprom(this->GetMqttPayloadOn(), MqttPayloadOnStartAddr, MqttPayloadOnLength);
     saveToEeprom(this->GetMqttPayloadOff(), MqttPayloadOffStartAddr, MqttPayloadOffLength);
 }
@@ -120,8 +120,8 @@ String Settings::GetMqttStateTopicBase() {
 void Settings::SetMqttRetain(String value) {
     this->MqttRetain = (value.length() > 0 ? "1" : "0");
 }
-String Settings::GetMqttRetain() {
-    return this->MqttRetain;
+bool Settings::GetMqttRetain() {
+    return this->MqttRetain == "1" ? true : false;
 }
 void Settings::SetMqttPayloadOn(String value) {
     this->MqttPayloadOn = value;

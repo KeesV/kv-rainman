@@ -6,20 +6,26 @@ MqttClient::MqttClient() : mqttClient(espClient) {
 void MqttClient::Start(Settings& settings, std::vector<WateringStation*> stations) {
     this->settings = settings;
     this->wateringStations = stations;
-    this->lastUpdated = millis();
-    const char* ip = "192.168.1.63";
+    this->mqttHost = this->settings.GetMqttBrokerHost();
+    this->mqttPort = this->settings.GetMqttBrokerPort().toInt();
+    this->mqttShouldRetain = this->settings.GetMqttRetain();
 
     for(int i = 0; i<=5; i++) {
         this->previousWateringStationStates.push_back(this->wateringStations[i]->IsWatering());
     }
 
-    this->mqttClient.setServer(ip, 1883);
+    Serial.print("Connecting to MQTT broker ");
+    Serial.print(this->mqttHost.c_str());
+    Serial.print(", port ");
+    Serial.println(this->mqttPort);
+    this->mqttClient.setServer(this->mqttHost.c_str(), this->mqttPort);
     this->mqttClient.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->messageReceivedCallback(topic, payload, length); });
 }
 
 void MqttClient::Handle() {
     if (!this->mqttClient.connected()) {
         this->mqttReconnect();
+        return;
     }
 
     // Find if any of the station states changed
@@ -37,7 +43,7 @@ void MqttClient::Handle() {
             Serial.print(mqttStateTopic);
             Serial.print("]: ");
             Serial.println(payload);
-            this->mqttClient.publish(mqttStateTopic.c_str(), payload.c_str());
+            this->mqttClient.publish(mqttStateTopic.c_str(), payload.c_str(), this->mqttShouldRetain);
             this->previousWateringStationStates[i] = this->wateringStations[i]->IsWatering();
         }
     }
@@ -80,28 +86,22 @@ void MqttClient::messageReceivedCallback(char* p_topic, byte* p_payload, unsigne
 }
 
 void MqttClient::mqttReconnect() {
-    // Loop until we're reconnected
-    while (!this->mqttClient.connected()) {
-        Serial.print("Attempting MQTT connection...");
-        // Create a random client ID
-        String clientId = "rainman-";
-        clientId += String(random(0xffff), HEX);
-        // Attempt to connect
-        if (this->mqttClient.connect(clientId.c_str())) {
-            Serial.println("MQTT connected!");
-            
-            String mqttCommandTopicBase = this->settings.GetMqttCommandTopicBase();
-            String mqttCommandSubscribtion = mqttCommandTopicBase + "/+";
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "rainman-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (this->mqttClient.connect(clientId.c_str())) {
+        Serial.println("MQTT connected!");
+        
+        String mqttCommandTopicBase = this->settings.GetMqttCommandTopicBase();
+        String mqttCommandSubscribtion = mqttCommandTopicBase + "/+";
 
-            Serial.print("Subscribing to topic: ");
-            Serial.println(mqttCommandSubscribtion.c_str());
-            mqttClient.subscribe(mqttCommandSubscribtion.c_str());
-        } else {
-            Serial.print("MQTT connect failed, rc=");
-            Serial.print(this->mqttClient.state());
-            Serial.println(" try again in 5 seconds");
-            // Wait 5 seconds before retrying
-            delay(5000);
-        }
+        Serial.print("Subscribing to topic: ");
+        Serial.println(mqttCommandSubscribtion.c_str());
+        mqttClient.subscribe(mqttCommandSubscribtion.c_str());
+    } else {
+        Serial.print("MQTT connect failed, rc=");
+        Serial.println(this->mqttClient.state());
     }
 }
