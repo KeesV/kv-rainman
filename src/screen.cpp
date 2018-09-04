@@ -12,17 +12,28 @@ void Screen::Start(std::vector<WateringStation*> stations) {
     this->wateringStations = stations;
 
     this->UpdateEntireScreen();
+
+    this->lastupdated = millis();
+    this->currentImage = icon_cloudy;
 }
 
 void Screen::UpdateEntireScreen() {
-    this->DisplayStationStatus(1, this->wateringStations[0]->IsWatering());
-    this->DisplayStationStatus(2, this->wateringStations[1]->IsWatering());
-    this->DisplayStationStatus(3, this->wateringStations[2]->IsWatering());
-    this->DisplayStationStatus(4, this->wateringStations[3]->IsWatering());
-    this->DisplayStationStatus(5, this->wateringStations[4]->IsWatering());
-    this->DisplayStationStatus(6, this->wateringStations[5]->IsWatering());
-    
+    //this->DisplayWeather();
+    for(int i = 0; i<=5; i++)
+    {
+        this->DisplayStationStatus(this->wateringStations[i]->GetNumber(), this->wateringStations[i]->IsWatering());
+    }
+   
     this->display.display();
+}
+
+void Screen::DisplayWeather()
+{
+    if(this->lastupdated - millis() > 1000) {
+        // Display next image
+        this->lastupdated = millis();
+    }
+    this->display.drawBitmap(38, 1, this->currentImage, 48, 48, WHITE);
 }
 
 void Screen::DisplayStationStatus(int stationNumber, bool status)

@@ -15,6 +15,7 @@ class WateringStation {
     bool IsWatering();
     void StartWatering();
     void StopWatering();
+    int GetNumber();
 };
 
 #endif

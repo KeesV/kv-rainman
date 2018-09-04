@@ -35,3 +35,7 @@ void WateringStation::StopWatering() {
     Serial.print(this->number);
     Serial.println(": stopped watering");
 }
+
+int WateringStation::GetNumber() {
+    return this->number;
+}
