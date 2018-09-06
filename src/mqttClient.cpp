@@ -3,8 +3,9 @@
 MqttClient::MqttClient() : mqttClient(espClient) {
 }
 
-void MqttClient::Start(Settings& settings, std::vector<WateringStation*> stations) {
+void MqttClient::Start(Settings& settings, RainmanStatus* status, std::vector<WateringStation*> stations) {
     this->settings = settings;
+    this->status = status;
     this->wateringStations = stations;
     this->mqttHost = this->settings.GetMqttBrokerHost();
     this->mqttPort = this->settings.GetMqttBrokerPort().toInt();
@@ -24,9 +25,11 @@ void MqttClient::Start(Settings& settings, std::vector<WateringStation*> station
 
 void MqttClient::Handle() {
     if (!this->mqttClient.connected()) {
+        this->status->SetMqttStatus(t_RainmanConnectionStatus::ConnectionNOK);
         this->mqttReconnect();
         return;
     }
+    this->status->SetMqttStatus(t_RainmanConnectionStatus::ConnectionOK);
 
     // Find if any of the station states changed
     for(int i = 0; i<=5; i++) {

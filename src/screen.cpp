@@ -3,13 +3,14 @@
 Screen::Screen() : display(OLED_RESET) {
 }
 
-void Screen::Start(std::vector<WateringStation*> stations) {
+void Screen::Start(RainmanStatus* status, std::vector<WateringStation*> stations) {
     // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
     // init done
     this->display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3D (for the 128x64)
     this->display.clearDisplay();
 
     this->wateringStations = stations;
+    this->status = status;
 
     this->weather_icons.push_back(icon_cloudy);
     this->weather_icons.push_back(icon_fog);
@@ -27,6 +28,8 @@ void Screen::Start(std::vector<WateringStation*> stations) {
 
     this->status_icons.push_back(icon_wifi_on);
     this->status_icons.push_back(icon_wifi_off);
+    this->status_icons.push_back(icon_mqtt_connected);
+    this->status_icons.push_back(icon_mqtt_disconnected);
 
     this->lastupdated = millis();
     this->currentImage = 0;
@@ -61,8 +64,17 @@ void Screen::DisplayWeather()
 
 void Screen::DisplayConnectionStatus() 
 {
-    this->display.fillRect(104, 0, 24, 24, BLACK);
-    this->display.drawBitmap(104, 0, this->status_icons[0], 24, 24, WHITE);
+    this->display.fillRect(104, 0, 16, 16, BLACK);
+    const uint8_t* wifiStatusImage = this->status->GetWifiStatus() == t_RainmanConnectionStatus::ConnectionOK
+        ? this->status_icons[0]
+        : this->status_icons[1];
+    this->display.drawBitmap(104, 0, wifiStatusImage, 16, 16, WHITE);
+
+    this->display.fillRect(104, 19, 16, 16, BLACK);
+    const uint8_t* mqttStatusImage = this->status->GetMqttStatus() == t_RainmanConnectionStatus::ConnectionOK
+        ? this->status_icons[2]
+        : this->status_icons[3];
+    this->display.drawBitmap(104, 19, mqttStatusImage, 16, 16, WHITE);
 }
 
 void Screen::DisplayStationStatus(int stationNumber, bool status)

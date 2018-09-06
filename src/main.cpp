@@ -5,6 +5,7 @@
 #include "settings.h"
 #include "wateringStation.h"
 #include "mqttClient.h"
+#include "rainmanStatus.h"
 
 const char *ssid = "";
 const char *password = "";
@@ -12,6 +13,7 @@ const char *password = "";
 Settings settings;
 Screen screen;
 MqttClient mqttClient;
+RainmanStatus *status = new RainmanStatus();
 
 std::vector<WateringStation *> wateringStations{
     new WateringStation(),
@@ -32,7 +34,7 @@ void setup()
     wateringStations[4]->Setup(5, D4);
     wateringStations[5]->Setup(6, D5);
 
-    screen.Start(wateringStations);
+    screen.Start(status, wateringStations);
 
     /* Explicitly set the ESP8266 to be a WiFi-client, otherwise, it by default,
     would try to act as both a client and an access-point and could cause
@@ -55,11 +57,25 @@ void setup()
     Serial.println(WiFi.localIP());
 
     start_webserver(settings);
-    mqttClient.Start(settings, wateringStations);
+    mqttClient.Start(settings, status, wateringStations);
+}
+
+void handle_status()
+{
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        status->SetWifiStatus(t_RainmanConnectionStatus::ConnectionNOK);
+    }
+    else
+    {
+        status->SetWifiStatus(t_RainmanConnectionStatus::ConnectionOK);
+    }
 }
 
 void loop()
 {
+    handle_status();
+    yield();
     handle_webserver();
     yield();
     mqttClient.Handle();

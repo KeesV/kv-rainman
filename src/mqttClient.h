@@ -6,10 +6,12 @@
 
 #include "settings.h"
 #include "wateringStation.h"
+#include "rainmanStatus.h"
 
 class MqttClient {
     private:
     Settings settings;
+    RainmanStatus* status;
     WiFiClient espClient;
     PubSubClient mqttClient;
     std::vector<WateringStation*> wateringStations;
@@ -22,7 +24,7 @@ class MqttClient {
 
     public:
     MqttClient();
-    void Start(Settings& settings, std::vector<WateringStation*> stations);
+    void Start(Settings& settings, RainmanStatus* status, std::vector<WateringStation*> stations);
     void Handle();
 };
 

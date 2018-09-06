@@ -9,16 +9,18 @@
 #include "wateringStation.h"
 #include "weather_icons.h"
 #include "status_icons.h"
+#include "rainmanStatus.h"
 
 #define OLED_RESET -1
 
 class Screen {
     public:
     Screen();
-    void Start(std::vector<WateringStation*> stations);
+    void Start(RainmanStatus* status, std::vector<WateringStation*> stations);
     void Handle();
 
     private:
+    RainmanStatus* status;
     std::vector<WateringStation*> wateringStations;
     Adafruit_SSD1306 display;
     void DisplayStationStatus(int stationNumber, bool status);
