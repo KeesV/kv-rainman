@@ -8,6 +8,7 @@
 
 #include "wateringStation.h"
 #include "weather_icons.h"
+#include "status_icons.h"
 
 #define OLED_RESET -1
 
@@ -22,10 +23,14 @@ class Screen {
     Adafruit_SSD1306 display;
     void DisplayStationStatus(int stationNumber, bool status);
     void DisplayWeather();
+    void DisplayConnectionStatus();
     void UpdateEntireScreen();
 
-    uint16_t lastupdated;
-    const uint8_t *currentImage;
+    unsigned long lastupdated;
+    int currentImage;
+
+    std::vector<const uint8_t*> weather_icons;
+    std::vector<const uint8_t*> status_icons;
 };
 
 

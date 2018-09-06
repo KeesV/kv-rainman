@@ -11,14 +11,33 @@ void Screen::Start(std::vector<WateringStation*> stations) {
 
     this->wateringStations = stations;
 
-    this->UpdateEntireScreen();
+    this->weather_icons.push_back(icon_cloudy);
+    this->weather_icons.push_back(icon_fog);
+    this->weather_icons.push_back(icon_hail);
+    this->weather_icons.push_back(icon_lightning);
+    this->weather_icons.push_back(icon_lightning_rainy);
+    this->weather_icons.push_back(icon_partlycloudy);
+    this->weather_icons.push_back(icon_pouring);
+    this->weather_icons.push_back(icon_rainy);
+    this->weather_icons.push_back(icon_snowy);
+    this->weather_icons.push_back(icon_snowy_rainy);
+    this->weather_icons.push_back(icon_sunny);
+    this->weather_icons.push_back(icon_windy);
+    this->weather_icons.push_back(icon_windy_variant);
+
+    this->status_icons.push_back(icon_wifi_on);
+    this->status_icons.push_back(icon_wifi_off);
 
     this->lastupdated = millis();
-    this->currentImage = icon_cloudy;
+    this->currentImage = 0;
+
+    this->UpdateEntireScreen();
 }
 
 void Screen::UpdateEntireScreen() {
-    //this->DisplayWeather();
+    this->DisplayWeather();
+    this->DisplayConnectionStatus();
+
     for(int i = 0; i<=5; i++)
     {
         this->DisplayStationStatus(this->wateringStations[i]->GetNumber(), this->wateringStations[i]->IsWatering());
@@ -29,11 +48,21 @@ void Screen::UpdateEntireScreen() {
 
 void Screen::DisplayWeather()
 {
-    if(this->lastupdated - millis() > 1000) {
-        // Display next image
+    if((millis() - this->lastupdated) > 1000) {
+        this->currentImage++;
+        if(this->currentImage >= this->weather_icons.size()) {
+            this->currentImage = 0;
+        }
         this->lastupdated = millis();
     }
-    this->display.drawBitmap(38, 1, this->currentImage, 48, 48, WHITE);
+    this->display.fillRect(38, -3, 48, 48, BLACK);
+    this->display.drawBitmap(38, -3, this->weather_icons[this->currentImage], 48, 48, WHITE);
+}
+
+void Screen::DisplayConnectionStatus() 
+{
+    this->display.fillRect(104, 0, 24, 24, BLACK);
+    this->display.drawBitmap(104, 0, this->status_icons[0], 24, 24, WHITE);
 }
 
 void Screen::DisplayStationStatus(int stationNumber, bool status)
