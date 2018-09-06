@@ -61,6 +61,7 @@ void Settings::ReadAllSettingsFromEeprom() {
     this->SetMqttRetain(readFromEeprom(MqttRetainStartAddr, MqttRetainLength));
     this->SetMqttPayloadOn(readFromEeprom(MqttPayloadOnStartAddr, MqttPayloadOnLength));
     this->SetMqttPayloadOff(readFromEeprom(MqttPayloadOffStartAddr, MqttPayloadOffLength));
+    this->SetMqttWeatherTopic(readFromEeprom(MqttWeatherTopicStartAddr, MqttWeatherTopicLength));
 }
 
 void Settings::EraseAll() {
@@ -79,6 +80,7 @@ void Settings::Save() {
     saveToEeprom(this->GetMqttRetain() ? "1" : "0", MqttRetainStartAddr, MqttRetainLength);
     saveToEeprom(this->GetMqttPayloadOn(), MqttPayloadOnStartAddr, MqttPayloadOnLength);
     saveToEeprom(this->GetMqttPayloadOff(), MqttPayloadOffStartAddr, MqttPayloadOffLength);
+    saveToEeprom(this->GetMqttWeatherTopic(), MqttWeatherTopicStartAddr, MqttWeatherTopicLength);
 }
 
 void Settings::DumpToSerial() {
@@ -86,6 +88,7 @@ void Settings::DumpToSerial() {
     Serial.print("MqttBrokerPort: ");       Serial.println(this->GetMqttBrokerPort());
     Serial.print("MqttCommandTopicBase: "); Serial.println(this->GetMqttCommandTopicBase());
     Serial.print("MqttStateTopicBase: ");   Serial.println(this->GetMqttStateTopicBase());
+    Serial.print("MqttWeatherTopic: ");     Serial.println(this->GetMqttWeatherTopic());
     Serial.print("MqttRetain: ");           Serial.println(this->GetMqttRetain());
     Serial.print("MqttPayloadOn: ");        Serial.println(this->GetMqttPayloadOn());
     Serial.print("MqttPayloadOff: ");       Serial.println(this->GetMqttPayloadOff());
@@ -134,4 +137,10 @@ void Settings::SetMqttPayloadOff(String value) {
 }
 String Settings::GetMqttPayloadOff() {
     return this->MqttPayloadOff;
+}
+void Settings::SetMqttWeatherTopic(String value) {
+    this->MqttWeatherTopic = value;
+}
+String Settings::GetMqttWeatherTopic() {
+    return this->MqttWeatherTopic;
 }

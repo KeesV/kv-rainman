@@ -40,6 +40,7 @@ String indexProcessor(const String& key) {
     else if (key == "MqttRetainCheckedValue") return lSettings.GetMqttRetain() ? "CHECKED" : " ";
     else if (key == "MqttPayloadOnValue") return "value=\""+lSettings.GetMqttPayloadOn()+"\"";
     else if (key == "MqttPayloadOffValue") return "value=\""+lSettings.GetMqttPayloadOff()+"\"";
+    else if (key == "MqttWeatherTopicValue") return "value=\""+lSettings.GetMqttWeatherTopic()+"\"";
 
     return "oops";
 }
@@ -80,6 +81,7 @@ void saveSettings() {
     String MqttRetain = server.arg("MqttRetain");
     String MqttPayloadOn = server.arg("MqttPayloadOn");
     String MqttPayloadOff = server.arg("MqttPayloadOff");
+    String MqttWeatherTopic = server.arg("MqttWeatherTopic");
 
     Serial.print("Number of args: ");
     Serial.println(server.args());
@@ -92,6 +94,8 @@ void saveSettings() {
     Serial.println(MqttCommandTopicBase);
     Serial.print("MqttStateTopicBase: ");
     Serial.println(MqttStateTopicBase);
+    Serial.print("MqttWeatherTopic: ");
+    Serial.println(MqttWeatherTopic);
     Serial.print("MqttRetain: ");
     Serial.println(MqttRetain);
     Serial.print("MqttPayloadOn: ");
@@ -103,6 +107,7 @@ void saveSettings() {
     lSettings.SetMqttBrokerPort(MqttBrokerPort);
     lSettings.SetMqttCommandTopicBase(MqttCommandTopicBase);
     lSettings.SetMqttStateTopicBase(MqttStateTopicBase);
+    lSettings.SetMqttWeatherTopic(MqttWeatherTopic);
     lSettings.SetMqttPayloadOff(MqttPayloadOff);
     lSettings.SetMqttRetain(MqttRetain);
     lSettings.SetMqttPayloadOn(MqttPayloadOn);

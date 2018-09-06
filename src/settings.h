@@ -11,7 +11,8 @@
 // String MqttRetain;              //5 bytes  | start 114, length 5
 // String MqttPayloadOn;           //10 bytes | start 119, length 10
 // String MqttPayloadOff;          //10 bytes | start 129, length 10
-//Total nr of bytes: 133
+// String MqttWeatherTopic         //35 bytes | start 139, length 35
+//Total nr of bytes: 174
 
 #define MAX_EEPROM_SIZE 512
 
@@ -22,6 +23,7 @@
 #define MqttRetainStartAddr             114
 #define MqttPayloadOnStartAddr          119
 #define MqttPayloadOffStartAddr         129
+#define MqttWeatherTopicStartAddr       139
 #define MqttBrokerHostLength            35
 #define MqttBrokerPortLength            8
 #define MqttCommandTopicBaseLength      35
@@ -29,6 +31,7 @@
 #define MqttRetainLength                5
 #define MqttPayloadOnLength             10
 #define MqttPayloadOffLength            10
+#define MqttWeatherTopicLength          35
 
 class Settings
 {
@@ -40,6 +43,7 @@ class Settings
     String MqttRetain;
     String MqttPayloadOn;
     String MqttPayloadOff;
+    String MqttWeatherTopic;
     void ReadAllSettingsFromEeprom();
 
     public:
@@ -58,6 +62,8 @@ class Settings
     String GetMqttPayloadOn();
     void SetMqttPayloadOff(String value);
     String GetMqttPayloadOff();
+    String GetMqttWeatherTopic();
+    void SetMqttWeatherTopic(String value);
     
     void Save();
     void EraseAll();
