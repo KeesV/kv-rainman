@@ -51,15 +51,28 @@ void Screen::UpdateEntireScreen() {
 
 void Screen::DisplayWeather()
 {
-    if((millis() - this->lastupdated) > 1000) {
-        this->currentImage++;
-        if(this->currentImage >= this->weather_icons.size()) {
-            this->currentImage = 0;
-        }
-        this->lastupdated = millis();
+    int weatherIcon;
+
+    switch(this->status->GetWeather()) {
+        case t_RainmanWeather::CLOUDY: weatherIcon = 0; break;
+        case t_RainmanWeather::FOG: weatherIcon = 1; break;
+        case t_RainmanWeather::HAIL: weatherIcon = 2; break;
+        case t_RainmanWeather::LIGHTNING: weatherIcon = 3; break;
+        case t_RainmanWeather::LIGHTNING_RAINY: weatherIcon = 4; break;
+        case t_RainmanWeather::PARTLYCLOUDY: weatherIcon = 5; break;
+        case t_RainmanWeather::POURING: weatherIcon = 6; break;
+        case t_RainmanWeather::RAINY: weatherIcon = 7; break;
+        case t_RainmanWeather::SNOWY: weatherIcon = 8; break;
+        case t_RainmanWeather::SNOWY_RAINY: weatherIcon = 9; break;
+        case t_RainmanWeather::SUNNY: weatherIcon = 10; break;
+        case t_RainmanWeather::WINDY: weatherIcon = 11; break;
+        case t_RainmanWeather::WINDY_VARIANT: weatherIcon = 12; break;
     }
+    
     this->display.fillRect(38, -3, 48, 48, BLACK);
-    this->display.drawBitmap(38, -3, this->weather_icons[this->currentImage], 48, 48, WHITE);
+    if(this->status->GetWeather() != t_RainmanWeather::UNKNOWN) {
+        this->display.drawBitmap(38, -3, this->weather_icons[weatherIcon], 48, 48, WHITE);
+    }
 }
 
 void Screen::DisplayConnectionStatus() 

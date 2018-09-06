@@ -68,6 +68,8 @@ void MqttClient::messageReceivedCallback(char* p_topic, byte* p_payload, unsigne
 
     String topic(p_topic);
     String mqttCommandTopicBase = this->settings.GetMqttCommandTopicBase();
+    String mqttWeatherTopic = this->settings.GetMqttWeatherTopic();
+
     if(topic.startsWith(mqttCommandTopicBase)) {
         Serial.print("Received on command topic for station: ");
         String station = topic.substring(mqttCommandTopicBase.length()+1);
@@ -85,6 +87,23 @@ void MqttClient::messageReceivedCallback(char* p_topic, byte* p_payload, unsigne
         } else {
             Serial.println("No valid station!");
         }
+    } else if (topic.startsWith(mqttWeatherTopic)) {
+        Serial.println("Received on weather topic.");
+        t_RainmanWeather w=t_RainmanWeather::UNKNOWN;
+        if(payload == "cloudy") { w = t_RainmanWeather::CLOUDY; }
+        if(payload == "fog") { w = t_RainmanWeather::FOG; }
+        if(payload == "hail") { w = t_RainmanWeather::HAIL; }
+        if(payload == "lightning") { w = t_RainmanWeather::LIGHTNING; }
+        if(payload == "lightning-rainy") { w = t_RainmanWeather::LIGHTNING_RAINY; }
+        if(payload == "partlycloudy") { w = t_RainmanWeather::PARTLYCLOUDY; }
+        if(payload == "pouring") { w = t_RainmanWeather::POURING; }
+        if(payload == "rainy") { w = t_RainmanWeather::RAINY; }
+        if(payload == "snowy") { w = t_RainmanWeather::SNOWY; }
+        if(payload == "snowy-rainy") { w = t_RainmanWeather::SNOWY_RAINY; }
+        if(payload == "sunny") { w = t_RainmanWeather::SUNNY; }
+        if(payload == "windy") { w = t_RainmanWeather::WINDY; }
+        if(payload == "windy-variant") { w = t_RainmanWeather::WINDY_VARIANT; }
+        this->status->SetWeather(w);
     }
 }
 
@@ -100,9 +119,23 @@ void MqttClient::mqttReconnect() {
         String mqttCommandTopicBase = this->settings.GetMqttCommandTopicBase();
         String mqttCommandSubscribtion = mqttCommandTopicBase + "/+";
 
-        Serial.print("Subscribing to topic: ");
-        Serial.println(mqttCommandSubscribtion.c_str());
-        mqttClient.subscribe(mqttCommandSubscribtion.c_str());
+        if(mqttCommandTopicBase.length() > 0) {
+            Serial.print("Subscribing to topic: ");
+            Serial.println(mqttCommandSubscribtion.c_str());
+            mqttClient.subscribe(mqttCommandSubscribtion.c_str());
+        } else {
+            Serial.println("MqttCommandTopicBase not set, cannot subscribe!");
+        }
+
+        String mqttWeatherTopic = this->settings.GetMqttWeatherTopic();
+        
+        if(mqttWeatherTopic.length() > 0) {
+            Serial.print("Subscribing to topic: ");
+            Serial.println(mqttWeatherTopic);
+            mqttClient.subscribe(mqttWeatherTopic.c_str());
+        } else {
+            Serial.println("mqttWeatherTopic not set, cannot subscribe!");
+        }
     } else {
         Serial.print("MQTT connect failed, rc=");
         Serial.println(this->mqttClient.state());
