@@ -10,7 +10,7 @@
 
 class MqttClient {
     private:
-    Settings settings;
+    Settings* settings;
     RainmanStatus* status;
     WiFiClient espClient;
     PubSubClient mqttClient;
@@ -18,13 +18,11 @@ class MqttClient {
     std::vector<bool> previousWateringStationStates;
     void messageReceivedCallback(char* p_topic, byte* p_payload, unsigned int p_length);
     void mqttReconnect();
-    String mqttHost;
-    uint16_t mqttPort;
     bool mqttShouldRetain;
 
     public:
     MqttClient();
-    void Start(Settings& settings, RainmanStatus* status, std::vector<WateringStation*> stations);
+    void Start(Settings* settings, RainmanStatus* status, std::vector<WateringStation*> stations);
     void Handle();
 };
 

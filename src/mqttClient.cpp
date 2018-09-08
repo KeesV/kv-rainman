@@ -3,23 +3,21 @@
 MqttClient::MqttClient() : mqttClient(espClient) {
 }
 
-void MqttClient::Start(Settings& settings, RainmanStatus* status, std::vector<WateringStation*> stations) {
+void MqttClient::Start(Settings* settings, RainmanStatus* status, std::vector<WateringStation*> stations) {
     this->settings = settings;
     this->status = status;
     this->wateringStations = stations;
-    this->mqttHost = this->settings.GetMqttBrokerHost();
-    this->mqttPort = this->settings.GetMqttBrokerPort().toInt();
-    this->mqttShouldRetain = this->settings.GetMqttRetain();
+    this->mqttShouldRetain = this->settings->GetMqttRetain();
 
     for(int i = 0; i<=5; i++) {
         this->previousWateringStationStates.push_back(this->wateringStations[i]->IsWatering());
     }
 
     Serial.print("Connecting to MQTT broker ");
-    Serial.print(this->mqttHost.c_str());
+    Serial.print(this->settings->GetMqttBrokerHost());
     Serial.print(", port ");
-    Serial.println(this->mqttPort);
-    this->mqttClient.setServer(this->mqttHost.c_str(), this->mqttPort);
+    Serial.println(this->settings->GetMqttBrokerPort());
+    this->mqttClient.setServer(this->settings->GetMqttBrokerHost(), this->settings->GetMqttBrokerPort());
     this->mqttClient.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->messageReceivedCallback(topic, payload, length); });
 }
 
@@ -37,11 +35,11 @@ void MqttClient::Handle() {
             Serial.print("Station ");
             Serial.print(i+1);
             Serial.println(" changed state!");
-            String mqttStateTopicBase = this->settings.GetMqttStateTopicBase();
+            String mqttStateTopicBase = this->settings->GetMqttStateTopicBase();
             String mqttStateTopic = mqttStateTopicBase + "/" + (i+1);
             String payload = this->wateringStations[i]->IsWatering() 
-                ? this->settings.GetMqttPayloadOn()
-                : this->settings.GetMqttPayloadOff();
+                ? this->settings->GetMqttPayloadOn()
+                : this->settings->GetMqttPayloadOff();
             Serial.print("Publishing [");
             Serial.print(mqttStateTopic);
             Serial.print("]: ");
@@ -67,8 +65,8 @@ void MqttClient::messageReceivedCallback(char* p_topic, byte* p_payload, unsigne
     Serial.println(payload);
 
     String topic(p_topic);
-    String mqttCommandTopicBase = this->settings.GetMqttCommandTopicBase();
-    String mqttWeatherTopic = this->settings.GetMqttWeatherTopic();
+    String mqttCommandTopicBase = this->settings->GetMqttCommandTopicBase();
+    String mqttWeatherTopic = this->settings->GetMqttWeatherTopic();
 
     if(topic.startsWith(mqttCommandTopicBase)) {
         Serial.print("Received on command topic for station: ");
@@ -77,9 +75,9 @@ void MqttClient::messageReceivedCallback(char* p_topic, byte* p_payload, unsigne
         int stationNr = station.toInt();
         if(stationNr > 0 && stationNr <= 6)
         {
-            if(payload == this->settings.GetMqttPayloadOn()) {
+            if(payload == this->settings->GetMqttPayloadOn()) {
                 this->wateringStations[stationNr-1]->StartWatering();
-            } else if(payload == this->settings.GetMqttPayloadOff()) {
+            } else if(payload == this->settings->GetMqttPayloadOff()) {
                 this->wateringStations[stationNr-1]->StopWatering();
             } else {
                 Serial.println("No valid payload!");
@@ -116,23 +114,25 @@ void MqttClient::mqttReconnect() {
     if (this->mqttClient.connect(clientId.c_str())) {
         Serial.println("MQTT connected!");
         
-        String mqttCommandTopicBase = this->settings.GetMqttCommandTopicBase();
-        String mqttCommandSubscribtion = mqttCommandTopicBase + "/+";
+        char* mqttCommandTopicBase = this->settings->GetMqttCommandTopicBase();
+        char mqttCommandSubscribtion[MqttCommandTopicBaseLength+2];
+        strcpy(mqttCommandSubscribtion, mqttCommandTopicBase);
+        strcat(mqttCommandSubscribtion, "/+");
 
-        if(mqttCommandTopicBase.length() > 0) {
+        if(strlen(mqttCommandTopicBase) > 0) {
             Serial.print("Subscribing to topic: ");
-            Serial.println(mqttCommandSubscribtion.c_str());
-            mqttClient.subscribe(mqttCommandSubscribtion.c_str());
+            Serial.println(mqttCommandSubscribtion);
+            mqttClient.subscribe(mqttCommandSubscribtion);
         } else {
             Serial.println("MqttCommandTopicBase not set, cannot subscribe!");
         }
 
-        String mqttWeatherTopic = this->settings.GetMqttWeatherTopic();
+        char* mqttWeatherTopic = this->settings->GetMqttWeatherTopic();
         
-        if(mqttWeatherTopic.length() > 0) {
+        if(strlen(mqttWeatherTopic) > 0) {
             Serial.print("Subscribing to topic: ");
             Serial.println(mqttWeatherTopic);
-            mqttClient.subscribe(mqttWeatherTopic.c_str());
+            mqttClient.subscribe(mqttWeatherTopic);
         } else {
             Serial.println("mqttWeatherTopic not set, cannot subscribe!");
         }

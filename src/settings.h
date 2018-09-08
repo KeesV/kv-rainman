@@ -36,34 +36,38 @@
 class Settings
 {
     private:
-    String MqttBrokerHost;
-    String MqttBrokerPort;
-    String MqttCommandTopicBase;
-    String MqttStateTopicBase;
-    String MqttRetain;
-    String MqttPayloadOn;
-    String MqttPayloadOff;
-    String MqttWeatherTopic;
+    char MqttBrokerHost[MqttBrokerHostLength+1];
+    uint16_t MqttBrokerPort;
+    char MqttCommandTopicBase[MqttCommandTopicBaseLength+1];
+    char MqttStateTopicBase[MqttStateTopicBaseLength+1];
+    bool MqttRetain;
+    char MqttPayloadOn[MqttPayloadOnLength+1];
+    char MqttPayloadOff[MqttPayloadOffLength+1];
+    char MqttWeatherTopic[MqttWeatherTopicLength+1];
     void ReadAllSettingsFromEeprom();
 
     public:
     Settings();
-    String GetMqttBrokerHost();
-    void SetMqttBrokerHost(String value);
-    void SetMqttBrokerPort(String value);
-    String GetMqttBrokerPort();
-    void SetMqttCommandTopicBase(String value);
-    String GetMqttCommandTopicBase();
-    void SetMqttStateTopicBase(String value);
-    String GetMqttStateTopicBase();
-    void SetMqttRetain(String value);
+    ~Settings();
+    void Begin();
+    char* GetMqttBrokerHost();
+    void SetMqttBrokerHost(const char* value);
+    void SetMqttBrokerPort(uint16_t value);
+    void SetMqttBrokerPort(const char* value);
+    uint16_t GetMqttBrokerPort();
+    void SetMqttCommandTopicBase(const char* value);
+    char* GetMqttCommandTopicBase();
+    void SetMqttStateTopicBase(const char* value);
+    char* GetMqttStateTopicBase();
+    void SetMqttRetain(bool value);
+    void SetMqttRetain(const char* value);
     bool GetMqttRetain();
-    void SetMqttPayloadOn(String value);
-    String GetMqttPayloadOn();
-    void SetMqttPayloadOff(String value);
-    String GetMqttPayloadOff();
-    String GetMqttWeatherTopic();
-    void SetMqttWeatherTopic(String value);
+    void SetMqttPayloadOn(const char* value);
+    char* GetMqttPayloadOn();
+    void SetMqttPayloadOff(const char* value);
+    char* GetMqttPayloadOff();
+    char* GetMqttWeatherTopic();
+    void SetMqttWeatherTopic(const char* value);
     
     void Save();
     void EraseAll();

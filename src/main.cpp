@@ -10,7 +10,7 @@
 const char *ssid = "";
 const char *password = "";
 
-Settings settings;
+Settings* settings = new Settings();
 Screen screen;
 MqttClient mqttClient;
 RainmanStatus *status = new RainmanStatus();
@@ -26,6 +26,7 @@ std::vector<WateringStation *> wateringStations{
 void setup()
 {
     Serial.begin(115200);
+    settings->Begin();
 
     wateringStations[0]->Setup(1, D0);
     wateringStations[1]->Setup(2, D1);
@@ -49,7 +50,7 @@ void setup()
         Serial.print(".");
     }
 
-    settings.DumpToSerial();
+    settings->DumpToSerial();
 
     Serial.println("");
     Serial.println("WiFi connected");

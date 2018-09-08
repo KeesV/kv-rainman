@@ -1,7 +1,7 @@
 #include "webserver.h"
 
 ESP8266WebServer server(80);
-Settings lSettings;
+Settings* lSettings;
 
 // String getContentType(String filename){
 //   if(filename.endsWith(".htm")) return "text/html";
@@ -33,14 +33,14 @@ void send_file_from_spiffs(String filename, String contenttype)
 
 String indexProcessor(const String& key) {
     Serial.println(String("KEY IS ") + key);
-    if (key == "MqttBrokerHostValue") return "value=\""+lSettings.GetMqttBrokerHost()+"\"";
-    else if (key == "MqttBrokerPortValue") return "value=\""+lSettings.GetMqttBrokerPort()+"\"";
-    else if (key == "MqttCommandTopicBaseValue") return "value=\""+lSettings.GetMqttCommandTopicBase()+"\"";
-    else if (key == "MqttStateTopicBaseValue") return "value=\""+lSettings.GetMqttStateTopicBase()+"\"";
-    else if (key == "MqttRetainCheckedValue") return lSettings.GetMqttRetain() ? "CHECKED" : " ";
-    else if (key == "MqttPayloadOnValue") return "value=\""+lSettings.GetMqttPayloadOn()+"\"";
-    else if (key == "MqttPayloadOffValue") return "value=\""+lSettings.GetMqttPayloadOff()+"\"";
-    else if (key == "MqttWeatherTopicValue") return "value=\""+lSettings.GetMqttWeatherTopic()+"\"";
+    if (key == "MqttBrokerHostValue") return "value=\""+String(lSettings->GetMqttBrokerHost())+"\"";
+    else if (key == "MqttBrokerPortValue") return "value=\""+String(lSettings->GetMqttBrokerPort())+"\"";
+    else if (key == "MqttCommandTopicBaseValue") return "value=\""+String(lSettings->GetMqttCommandTopicBase())+"\"";
+    else if (key == "MqttStateTopicBaseValue") return "value=\""+String(lSettings->GetMqttStateTopicBase())+"\"";
+    else if (key == "MqttRetainCheckedValue") return lSettings->GetMqttRetain() ? "CHECKED" : " ";
+    else if (key == "MqttPayloadOnValue") return "value=\""+String(lSettings->GetMqttPayloadOn())+"\"";
+    else if (key == "MqttPayloadOffValue") return "value=\""+String(lSettings->GetMqttPayloadOff())+"\"";
+    else if (key == "MqttWeatherTopicValue") return "value=\""+String(lSettings->GetMqttWeatherTopic())+"\"";
 
     return "oops";
 }
@@ -57,7 +57,7 @@ void handle_index() {
 
 void handle_erase_settings() {
     Serial.println("Erasing settings...");
-    lSettings.EraseAll();
+    lSettings->EraseAll();
     server.sendHeader("Location", "/");
     server.send(303);
 }
@@ -103,21 +103,21 @@ void saveSettings() {
     Serial.print("MqttPayloadOff: ");
     Serial.println(MqttPayloadOff);
 
-    lSettings.SetMqttBrokerHost(MqttBrokerHost);
-    lSettings.SetMqttBrokerPort(MqttBrokerPort);
-    lSettings.SetMqttCommandTopicBase(MqttCommandTopicBase);
-    lSettings.SetMqttStateTopicBase(MqttStateTopicBase);
-    lSettings.SetMqttWeatherTopic(MqttWeatherTopic);
-    lSettings.SetMqttPayloadOff(MqttPayloadOff);
-    lSettings.SetMqttRetain(MqttRetain);
-    lSettings.SetMqttPayloadOn(MqttPayloadOn);
-    lSettings.Save();
+    lSettings->SetMqttBrokerHost(MqttBrokerHost.c_str());
+    lSettings->SetMqttBrokerPort(MqttBrokerPort.c_str());
+    lSettings->SetMqttCommandTopicBase(MqttCommandTopicBase.c_str());
+    lSettings->SetMqttStateTopicBase(MqttStateTopicBase.c_str());
+    lSettings->SetMqttWeatherTopic(MqttWeatherTopic.c_str());
+    lSettings->SetMqttPayloadOff(MqttPayloadOff.c_str());
+    lSettings->SetMqttRetain(MqttRetain);
+    lSettings->SetMqttPayloadOn(MqttPayloadOn.c_str());
+    lSettings->Save();
 
     server.sendHeader("Location", "/");
     server.send(303);  
 }
 
-void start_webserver(Settings& settings) {
+void start_webserver(Settings* settings) {
     Serial.println("Starting webserver...");
     lSettings = settings;
     SPIFFS.begin();
