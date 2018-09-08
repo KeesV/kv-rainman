@@ -1,5 +1,12 @@
 #include "mqttClient.h"
 
+bool startsWith(const char *str, const char *pre)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+}
+
 MqttClient::MqttClient() : mqttClient(espClient) {
 }
 
@@ -7,7 +14,6 @@ void MqttClient::Start(Settings* settings, RainmanStatus* status, std::vector<Wa
     this->settings = settings;
     this->status = status;
     this->wateringStations = stations;
-    this->mqttShouldRetain = this->settings->GetMqttRetain();
 
     for(int i = 0; i<=5; i++) {
         this->previousWateringStationStates.push_back(this->wateringStations[i]->IsWatering());
@@ -33,18 +39,25 @@ void MqttClient::Handle() {
     for(int i = 0; i<=5; i++) {
         if(this->previousWateringStationStates[i] != this->wateringStations[i]->IsWatering()) {
             Serial.print("Station ");
-            Serial.print(i+1);
+            Serial.print(this->wateringStations[i]->GetNumber());
             Serial.println(" changed state!");
-            String mqttStateTopicBase = this->settings->GetMqttStateTopicBase();
-            String mqttStateTopic = mqttStateTopicBase + "/" + (i+1);
-            String payload = this->wateringStations[i]->IsWatering() 
+
+            // Construct topic to publish to
+            char mqttStateTopic[MqttStateTopicBaseLength+3];
+            strcpy(mqttStateTopic, this->settings->GetMqttStateTopicBase());
+            strcat(mqttStateTopic, "/");
+            char stationNumberStr[2];
+            sprintf(stationNumberStr, "%d", this->wateringStations[i]->GetNumber());
+            strcat(mqttStateTopic, stationNumberStr);
+            
+            char* payload = this->wateringStations[i]->IsWatering() 
                 ? this->settings->GetMqttPayloadOn()
                 : this->settings->GetMqttPayloadOff();
             Serial.print("Publishing [");
             Serial.print(mqttStateTopic);
             Serial.print("]: ");
             Serial.println(payload);
-            this->mqttClient.publish(mqttStateTopic.c_str(), payload.c_str(), this->mqttShouldRetain);
+            this->mqttClient.publish(mqttStateTopic, payload, this->settings->GetMqttRetain());
             this->previousWateringStationStates[i] = this->wateringStations[i]->IsWatering();
         }
     }
@@ -55,29 +68,36 @@ void MqttClient::Handle() {
 void MqttClient::messageReceivedCallback(char* p_topic, byte* p_payload, unsigned int p_length) {
     Serial.print("Message arrived [");
     Serial.print(p_topic);
-    Serial.print("] ");
+    Serial.print("]: ");
     
     // concat the payload into a string
-    String payload;
+    char payload[p_length+1];
     for (uint8_t i = 0; i < p_length; i++) {
-        payload.concat((char)p_payload[i]);
+        payload[i] = (char)p_payload[i];
     }
-    Serial.println(payload);
+    payload[p_length] = '\0';
+    Serial.print("'");
+    Serial.print(payload);
+    Serial.println("'");
 
-    String topic(p_topic);
-    String mqttCommandTopicBase = this->settings->GetMqttCommandTopicBase();
-    String mqttWeatherTopic = this->settings->GetMqttWeatherTopic();
-
-    if(topic.startsWith(mqttCommandTopicBase)) {
+    if(startsWith(p_topic, this->settings->GetMqttCommandTopicBase()))
+    {
         Serial.print("Received on command topic for station: ");
-        String station = topic.substring(mqttCommandTopicBase.length()+1);
+        // Take everything from te received topic string, after the base topic string
+        char station[3];
+        memcpy(
+            station, 
+            &p_topic[strlen(this->settings->GetMqttCommandTopicBase())+1], 
+            strlen(p_topic) - strlen(this->settings->GetMqttCommandTopicBase())
+        );
         Serial.println(station);
-        int stationNr = station.toInt();
+        int stationNr;
+        sscanf(station, "%d", &stationNr);
         if(stationNr > 0 && stationNr <= 6)
         {
-            if(payload == this->settings->GetMqttPayloadOn()) {
+            if(strcmp(payload, this->settings->GetMqttPayloadOn()) == 0) {
                 this->wateringStations[stationNr-1]->StartWatering();
-            } else if(payload == this->settings->GetMqttPayloadOff()) {
+            } else if(strcmp(payload, this->settings->GetMqttPayloadOff()) == 0) {
                 this->wateringStations[stationNr-1]->StopWatering();
             } else {
                 Serial.println("No valid payload!");
@@ -85,22 +105,22 @@ void MqttClient::messageReceivedCallback(char* p_topic, byte* p_payload, unsigne
         } else {
             Serial.println("No valid station!");
         }
-    } else if (topic.startsWith(mqttWeatherTopic)) {
+    } else if (startsWith(p_topic, this->settings->GetMqttWeatherTopic())) {
         Serial.println("Received on weather topic.");
         t_RainmanWeather w=t_RainmanWeather::UNKNOWN;
-        if(payload == "cloudy") { w = t_RainmanWeather::CLOUDY; }
-        if(payload == "fog") { w = t_RainmanWeather::FOG; }
-        if(payload == "hail") { w = t_RainmanWeather::HAIL; }
-        if(payload == "lightning") { w = t_RainmanWeather::LIGHTNING; }
-        if(payload == "lightning-rainy") { w = t_RainmanWeather::LIGHTNING_RAINY; }
-        if(payload == "partlycloudy") { w = t_RainmanWeather::PARTLYCLOUDY; }
-        if(payload == "pouring") { w = t_RainmanWeather::POURING; }
-        if(payload == "rainy") { w = t_RainmanWeather::RAINY; }
-        if(payload == "snowy") { w = t_RainmanWeather::SNOWY; }
-        if(payload == "snowy-rainy") { w = t_RainmanWeather::SNOWY_RAINY; }
-        if(payload == "sunny") { w = t_RainmanWeather::SUNNY; }
-        if(payload == "windy") { w = t_RainmanWeather::WINDY; }
-        if(payload == "windy-variant") { w = t_RainmanWeather::WINDY_VARIANT; }
+        if(strcmp(payload, "cloudy") == 0) { w = t_RainmanWeather::CLOUDY; }
+        if(strcmp(payload, "fog") == 0) { w = t_RainmanWeather::FOG; }
+        if(strcmp(payload, "hail") == 0) { w = t_RainmanWeather::HAIL; }
+        if(strcmp(payload, "lightning") == 0) { w = t_RainmanWeather::LIGHTNING; }
+        if(strcmp(payload, "lightning-rainy") == 0) { w = t_RainmanWeather::LIGHTNING_RAINY; }
+        if(strcmp(payload, "partlycloudy") == 0) { w = t_RainmanWeather::PARTLYCLOUDY; }
+        if(strcmp(payload, "pouring") == 0) { w = t_RainmanWeather::POURING; }
+        if(strcmp(payload, "rainy") == 0) { w = t_RainmanWeather::RAINY; }
+        if(strcmp(payload, "snowy") == 0) { w = t_RainmanWeather::SNOWY; }
+        if(strcmp(payload, "snowy-rainy") == 0) { w = t_RainmanWeather::SNOWY_RAINY; }
+        if(strcmp(payload, "sunny") == 0) { w = t_RainmanWeather::SUNNY; }
+        if(strcmp(payload, "windy") == 0) { w = t_RainmanWeather::WINDY; }
+        if(strcmp(payload, "windy-variant") == 0) { w = t_RainmanWeather::WINDY_VARIANT; }
         this->status->SetWeather(w);
     }
 }
@@ -108,10 +128,21 @@ void MqttClient::messageReceivedCallback(char* p_topic, byte* p_payload, unsigne
 void MqttClient::mqttReconnect() {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "rainman-";
-    clientId += String(random(0xffff), HEX);
+    char str[8 + 1] = {0};
+    int i;
+    for (i = 0; i < 8; i += 2)
+    {
+        sprintf(&str[i], "%02X", rand() % 16);
+    }
+    
+    char clientId[17];
+    strcpy(clientId, "rainman-");
+    strcat(clientId, str);
+    Serial.print("Client id: ");
+    Serial.println(clientId);
+
     // Attempt to connect
-    if (this->mqttClient.connect(clientId.c_str())) {
+    if (this->mqttClient.connect(clientId)) {
         Serial.println("MQTT connected!");
         
         char* mqttCommandTopicBase = this->settings->GetMqttCommandTopicBase();

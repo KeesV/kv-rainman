@@ -18,7 +18,6 @@ class MqttClient {
     std::vector<bool> previousWateringStationStates;
     void messageReceivedCallback(char* p_topic, byte* p_payload, unsigned int p_length);
     void mqttReconnect();
-    bool mqttShouldRetain;
 
     public:
     MqttClient();
