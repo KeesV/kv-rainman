@@ -11,10 +11,19 @@ void Settings::Begin() {
     this->ReadAllSettingsFromEeprom();
 }
 
-void saveToEeprom(String val, int startAddr, int maxLength) {
+void saveToEeprom(const char* val, int startAddr, int maxLength) {
     // Write length of the string in the first 2 bytes of the field, so that we know how long to read when getting the value
-    String length = String(val.length());
-    if(length.length() < 2) { length = "0" + length; }
+    char length[3];
+    sprintf(length, "%d", strlen(val));
+
+    if(strlen(length) < 2) 
+    { 
+        // Prepend a 0
+        char newLength[3];
+        strcpy(newLength, "0");
+        strcat(newLength, length);
+        strcpy(length, newLength); 
+    }
     Serial.print("Writing with length: ");
     Serial.println(length);
     EEPROM.write(startAddr, length[0]);
@@ -22,7 +31,7 @@ void saveToEeprom(String val, int startAddr, int maxLength) {
 
     // Then write the actual data
     int addr = startAddr + 2;
-    for (int i = 0; i < val.length() && i < maxLength-2; ++i)
+    for (int i = 0; i < strlen(val) && i < maxLength-2; ++i)
     {
         EEPROM.write(addr, val[i]);
         Serial.print("Wrote: ");
@@ -34,8 +43,6 @@ void saveToEeprom(String val, int startAddr, int maxLength) {
 
 void readFromEeprom(char* destValue, int startAddr, int maxLength)
 {
-    //char* value = (char*)malloc(sizeof(char)*(maxLength+1));
-
     //Read length from first 2 bytes of field
     char lengthString[3];
     lengthString[0] = char(EEPROM.read(startAddr));
@@ -43,7 +50,7 @@ void readFromEeprom(char* destValue, int startAddr, int maxLength)
     lengthString[2] = '\0';
     int lengthToRead;
     sscanf(lengthString, "%d", &lengthToRead);
-    Serial.print("2- Going to read with length: ");
+    Serial.print("Going to read with length: ");
     Serial.println(lengthToRead);
 
     if(lengthToRead > 0)
@@ -56,7 +63,7 @@ void readFromEeprom(char* destValue, int startAddr, int maxLength)
             charNr ++;
         }
         destValue[charNr] = '\0';
-        Serial.print("2- Read from EEPROM: ");
+        Serial.print("Read from EEPROM: ");
         Serial.println(destValue);
         
     } else {
