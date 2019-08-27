@@ -1,6 +1,6 @@
 #include "screen.h"
 
-Screen::Screen() : display(OLED_RESET)
+Screen::Screen() : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET)
 {
 }
 
