@@ -1,7 +1,7 @@
 #include "webserver.h"
 
 ESP8266WebServer server(80);
-Settings* lSettings;
+Settings *lSettings;
 
 // String getContentType(String filename){
 //   if(filename.endsWith(".htm")) return "text/html";
@@ -21,57 +21,77 @@ Settings* lSettings;
 
 void send_file_from_spiffs(String filename, String contenttype)
 {
-    if (SPIFFS.exists(filename)) {                            // If the file exists
-        File file = SPIFFS.open(filename, "r");                 // Open it
-        size_t sent = server.streamFile(file, contenttype); // And send it to the client
-        file.close();    // Then close the file again
-        Serial.println("File sent to client");                               
-    } else {
+    if (SPIFFS.exists(filename))
+    {                                           // If the file exists
+        File file = SPIFFS.open(filename, "r"); // Open it
+        server.streamFile(file, contenttype);   // And send it to the client
+        file.close();                           // Then close the file again
+        Serial.println("File sent to client");
+    }
+    else
+    {
         Serial.println("File not found in SPIFFS!");
     }
 }
 
-String indexProcessor(const String& key) {
+String indexProcessor(const String &key)
+{
     Serial.println(String("KEY IS ") + key);
-    if (key == "MqttBrokerHostValue") return "value=\""+String(lSettings->GetMqttBrokerHost())+"\"";
-    else if (key == "MqttBrokerPortValue") return "value=\""+String(lSettings->GetMqttBrokerPort())+"\"";
-    else if (key == "MqttCommandTopicBaseValue") return "value=\""+String(lSettings->GetMqttCommandTopicBase())+"\"";
-    else if (key == "MqttStateTopicBaseValue") return "value=\""+String(lSettings->GetMqttStateTopicBase())+"\"";
-    else if (key == "MqttRetainCheckedValue") return lSettings->GetMqttRetain() ? "CHECKED" : " ";
-    else if (key == "MqttPayloadOnValue") return "value=\""+String(lSettings->GetMqttPayloadOn())+"\"";
-    else if (key == "MqttPayloadOffValue") return "value=\""+String(lSettings->GetMqttPayloadOff())+"\"";
-    else if (key == "MqttWeatherTopicValue") return "value=\""+String(lSettings->GetMqttWeatherTopic())+"\"";
+    if (key == "MqttBrokerHostValue")
+        return "value=\"" + String(lSettings->GetMqttBrokerHost()) + "\"";
+    else if (key == "MqttBrokerPortValue")
+        return "value=\"" + String(lSettings->GetMqttBrokerPort()) + "\"";
+    else if (key == "MqttCommandTopicBaseValue")
+        return "value=\"" + String(lSettings->GetMqttCommandTopicBase()) + "\"";
+    else if (key == "MqttStateTopicBaseValue")
+        return "value=\"" + String(lSettings->GetMqttStateTopicBase()) + "\"";
+    else if (key == "MqttRetainCheckedValue")
+        return lSettings->GetMqttRetain() ? "CHECKED" : " ";
+    else if (key == "MqttPayloadOnValue")
+        return "value=\"" + String(lSettings->GetMqttPayloadOn()) + "\"";
+    else if (key == "MqttPayloadOffValue")
+        return "value=\"" + String(lSettings->GetMqttPayloadOff()) + "\"";
+    else if (key == "MqttWeatherTopicValue")
+        return "value=\"" + String(lSettings->GetMqttWeatherTopic()) + "\"";
 
     return "oops";
 }
 
-void handle_index() {
+void handle_index()
+{
     Serial.println("Got request: index!");
-    if (ESPTemplateProcessor(server).send(String("/index.html"), indexProcessor)) {
+    if (ESPTemplateProcessor(server).send(String("/index.html"), indexProcessor))
+    {
         Serial.println("Succesfully processed template and sent to client!");
-    } else {
+    }
+    else
+    {
         Serial.println("Failed sending index to client!");
         server.send(404, "text/plain", "page not found.");
     }
 }
 
-void handle_erase_settings() {
+void handle_erase_settings()
+{
     Serial.println("Erasing settings...");
     lSettings->EraseAll();
     server.sendHeader("Location", "/");
     server.send(303);
 }
 
-void handle_bootstrap_min_css() {
+void handle_bootstrap_min_css()
+{
     Serial.println("Got request: bootstrap.min.css");
     send_file_from_spiffs("/bootstrap/css/bootstrap.min.gz", "text/css");
 }
 
-void handle_NotFound() {
+void handle_NotFound()
+{
     server.send(404, "text/plain", "404: Not Found");
 }
 
-void saveSettings() {
+void saveSettings()
+{
     // Save settings here
     Serial.println("Saving settings...");
     String MqttBrokerHost = server.arg("MqttBrokerHost");
@@ -114,10 +134,11 @@ void saveSettings() {
     lSettings->Save();
 
     server.sendHeader("Location", "/");
-    server.send(303);  
+    server.send(303);
 }
 
-void start_webserver(Settings* settings) {
+void start_webserver(Settings *settings)
+{
     Serial.println("Starting webserver...");
     lSettings = settings;
     SPIFFS.begin();
@@ -126,11 +147,12 @@ void start_webserver(Settings* settings) {
     server.on("/bootstrap/css/bootstrap.min.css", handle_bootstrap_min_css);
     server.on("/erase-settings", handle_erase_settings);
     server.onNotFound(handle_NotFound);
-    
+
     server.begin();
     Serial.println("Webserver started!");
 }
 
-void handle_webserver() {
+void handle_webserver()
+{
     server.handleClient();
 }

@@ -1,28 +1,32 @@
 #include "settings.h"
 
-Settings::Settings() { 
+Settings::Settings()
+{
 }
 
-Settings::~Settings() {
+Settings::~Settings()
+{
 }
 
-void Settings::Begin() {
+void Settings::Begin()
+{
     EEPROM.begin(MAX_EEPROM_SIZE);
     this->ReadAllSettingsFromEeprom();
 }
 
-void saveToEeprom(const char* val, int startAddr, int maxLength) {
+void saveToEeprom(const char *val, int startAddr, int maxLength)
+{
     // Write length of the string in the first 2 bytes of the field, so that we know how long to read when getting the value
     char length[3];
     sprintf(length, "%d", strlen(val));
 
-    if(strlen(length) < 2) 
-    { 
+    if (strlen(length) < 2)
+    {
         // Prepend a 0
         char newLength[3];
         strcpy(newLength, "0");
         strcat(newLength, length);
-        strcpy(length, newLength); 
+        strcpy(length, newLength);
     }
     Serial.print("Writing with length: ");
     Serial.println(length);
@@ -31,17 +35,17 @@ void saveToEeprom(const char* val, int startAddr, int maxLength) {
 
     // Then write the actual data
     int addr = startAddr + 2;
-    for (int i = 0; i < strlen(val) && i < maxLength-2; ++i)
+    for (int i = 0; i < (int)strlen(val) && i < maxLength - 2; ++i)
     {
         EEPROM.write(addr, val[i]);
         Serial.print("Wrote: ");
         Serial.println(val[i]);
-        addr++; 
+        addr++;
     }
     EEPROM.commit();
 }
 
-void readFromEeprom(char* destValue, int startAddr, int maxLength)
+void readFromEeprom(char *destValue, int startAddr, int maxLength)
 {
     //Read length from first 2 bytes of field
     char lengthString[3];
@@ -53,25 +57,27 @@ void readFromEeprom(char* destValue, int startAddr, int maxLength)
     Serial.print("Going to read with length: ");
     Serial.println(lengthToRead);
 
-    if(lengthToRead > 0)
+    if (lengthToRead > 0)
     {
         int charNr = 0;
         for (int i = startAddr + 2; i < (2 + startAddr + lengthToRead) && (i - startAddr < maxLength - 2); ++i)
         {
             char c = char(EEPROM.read(i));
             destValue[charNr] = c;
-            charNr ++;
+            charNr++;
         }
         destValue[charNr] = '\0';
         Serial.print("Read from EEPROM: ");
         Serial.println(destValue);
-        
-    } else {
+    }
+    else
+    {
         destValue[0] = '\0'; //If we don't have anything in EEPROM we'll just return an empty string
     }
 }
 
-void Settings::ReadAllSettingsFromEeprom() {
+void Settings::ReadAllSettingsFromEeprom()
+{
     readFromEeprom(this->MqttBrokerHost, MqttBrokerHostStartAddr, MqttBrokerHostLength);
     readFromEeprom(this->MqttCommandTopicBase, MqttCommandTopicBaseStartAddr, MqttCommandTopicBaseLength);
     readFromEeprom(this->MqttStateTopicBase, MqttStateTopicBaseStartAddr, MqttStateTopicBaseLength);
@@ -79,24 +85,27 @@ void Settings::ReadAllSettingsFromEeprom() {
     readFromEeprom(this->MqttPayloadOff, MqttPayloadOffStartAddr, MqttPayloadOffLength);
     readFromEeprom(this->MqttWeatherTopic, MqttWeatherTopicStartAddr, MqttWeatherTopicLength);
 
-    char mqttRetainStr[MqttRetainLength+1];
+    char mqttRetainStr[MqttRetainLength + 1];
     readFromEeprom(mqttRetainStr, MqttRetainStartAddr, MqttRetainLength);
     this->SetMqttRetain(mqttRetainStr);
 
-    char mqttBrokerPortStr[MqttBrokerPortLength+1];
+    char mqttBrokerPortStr[MqttBrokerPortLength + 1];
     readFromEeprom(mqttBrokerPortStr, MqttBrokerPortStartAddr, MqttBrokerPortLength);
     this->SetMqttBrokerPort(mqttBrokerPortStr);
 }
 
-void Settings::EraseAll() {
-    for(int i = 0; i < MAX_EEPROM_SIZE; i++ ) {
+void Settings::EraseAll()
+{
+    for (int i = 0; i < MAX_EEPROM_SIZE; i++)
+    {
         EEPROM.write(i, 0);
     }
     EEPROM.commit();
     this->ReadAllSettingsFromEeprom();
 }
 
-void Settings::Save() {
+void Settings::Save()
+{
     saveToEeprom(this->GetMqttBrokerHost(), MqttBrokerHostStartAddr, MqttBrokerHostLength);
     saveToEeprom(this->GetMqttCommandTopicBase(), MqttCommandTopicBaseStartAddr, MqttCommandTopicBaseLength);
     saveToEeprom(this->GetMqttStateTopicBase(), MqttStateTopicBaseStartAddr, MqttStateTopicBaseLength);
@@ -110,72 +119,99 @@ void Settings::Save() {
     saveToEeprom(mqttBrokerPortStr, MqttBrokerPortStartAddr, MqttBrokerPortLength);
 }
 
-void Settings::DumpToSerial() {
-    Serial.print("MqttBrokerHost: ");       Serial.println(this->GetMqttBrokerHost());
-    Serial.print("MqttBrokerPort: ");       Serial.println(this->GetMqttBrokerPort());
-    Serial.print("MqttCommandTopicBase: "); Serial.println(this->GetMqttCommandTopicBase());
-    Serial.print("MqttStateTopicBase: ");   Serial.println(this->GetMqttStateTopicBase());
-    Serial.print("MqttWeatherTopic: ");     Serial.println(this->GetMqttWeatherTopic());
-    Serial.print("MqttRetain: ");           Serial.println(this->GetMqttRetain());
-    Serial.print("MqttPayloadOn: ");        Serial.println(this->GetMqttPayloadOn());
-    Serial.print("MqttPayloadOff: ");       Serial.println(this->GetMqttPayloadOff());
+void Settings::DumpToSerial()
+{
+    Serial.print("MqttBrokerHost: ");
+    Serial.println(this->GetMqttBrokerHost());
+    Serial.print("MqttBrokerPort: ");
+    Serial.println(this->GetMqttBrokerPort());
+    Serial.print("MqttCommandTopicBase: ");
+    Serial.println(this->GetMqttCommandTopicBase());
+    Serial.print("MqttStateTopicBase: ");
+    Serial.println(this->GetMqttStateTopicBase());
+    Serial.print("MqttWeatherTopic: ");
+    Serial.println(this->GetMqttWeatherTopic());
+    Serial.print("MqttRetain: ");
+    Serial.println(this->GetMqttRetain());
+    Serial.print("MqttPayloadOn: ");
+    Serial.println(this->GetMqttPayloadOn());
+    Serial.print("MqttPayloadOff: ");
+    Serial.println(this->GetMqttPayloadOff());
 }
 
-void Settings::SetMqttBrokerHost(const char* value) {
+void Settings::SetMqttBrokerHost(const char *value)
+{
     strcpy(this->MqttBrokerHost, value);
 }
 
-char* Settings::GetMqttBrokerHost() {
+char *Settings::GetMqttBrokerHost()
+{
     return this->MqttBrokerHost;
 }
 
-void Settings::SetMqttBrokerPort(uint16_t value) {
+void Settings::SetMqttBrokerPort(uint16_t value)
+{
     this->MqttBrokerPort = value;
 }
-void Settings::SetMqttBrokerPort(const char* value) {
+void Settings::SetMqttBrokerPort(const char *value)
+{
     int mqttBrokerPort;
     sscanf(value, "%d", &mqttBrokerPort);
     this->SetMqttBrokerPort(mqttBrokerPort);
 }
-uint16_t Settings::GetMqttBrokerPort() {
+uint16_t Settings::GetMqttBrokerPort()
+{
     return this->MqttBrokerPort;
 }
-void Settings::SetMqttCommandTopicBase(const char* value) {
+void Settings::SetMqttCommandTopicBase(const char *value)
+{
     strcpy(this->MqttCommandTopicBase, value);
 }
-char* Settings::GetMqttCommandTopicBase() {
+char *Settings::GetMqttCommandTopicBase()
+{
     return this->MqttCommandTopicBase;
 }
-void Settings::SetMqttStateTopicBase(const char* value) {
+void Settings::SetMqttStateTopicBase(const char *value)
+{
     strcpy(this->MqttStateTopicBase, value);
 }
-char* Settings::GetMqttStateTopicBase() {
+char *Settings::GetMqttStateTopicBase()
+{
     return this->MqttStateTopicBase;
 }
-void Settings::SetMqttRetain(bool value) {
+void Settings::SetMqttRetain(bool value)
+{
     this->MqttRetain = value;
 }
-void Settings::SetMqttRetain(const char* value) {
+void Settings::SetMqttRetain(const char *value)
+{
     this->MqttRetain = (strlen(value) > 0 ? "1" : "0");
 }
-bool Settings::GetMqttRetain() {
+bool Settings::GetMqttRetain()
+{
     return this->MqttRetain;
 }
-void Settings::SetMqttPayloadOn(const char* value) {
+void Settings::SetMqttPayloadOn(const char *value)
+{
     strcpy(this->MqttPayloadOn, value);
 }
-char* Settings::GetMqttPayloadOn() {
+char *Settings::GetMqttPayloadOn()
+{
     return this->MqttPayloadOn;
 }
-void Settings::SetMqttPayloadOff(const char* value) {
+void Settings::SetMqttPayloadOff(const char *value)
+{
     strcpy(this->MqttPayloadOff, value);
 }
-char* Settings::GetMqttPayloadOff() {
+char *Settings::GetMqttPayloadOff()
+{
     return this->MqttPayloadOff;
 }
-void Settings::SetMqttWeatherTopic(const char* value) {
+void Settings::SetMqttWeatherTopic(const char *value)
+{
     strcpy(this->MqttWeatherTopic, value);
 }
-char* Settings::GetMqttWeatherTopic() {
+char *Settings::GetMqttWeatherTopic()
+{
     return this->MqttWeatherTopic;
 }
