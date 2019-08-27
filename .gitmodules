@@ -1,0 +1,3 @@
+[submodule "lib/ESPTemplateProcessor"]
+	path = lib/ESPTemplateProcessor
+	url = https://github.com/winder/ESPTemplateProcessor.git
