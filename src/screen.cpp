@@ -4,14 +4,14 @@ Screen::Screen() : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET)
 {
 }
 
-void Screen::Start(RainmanStatus *status, std::vector<WateringStation *> stations)
+void Screen::Start(RainmanStatus *status, WateringStationManager *stationManager)
 {
     // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
     // init done
     this->display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // initialize with the I2C addr 0x3D (for the 128x64)
     this->display.clearDisplay();
 
-    this->wateringStations = stations;
+    this->stationManager = stationManager;
     this->status = status;
 
     this->weather_icons.push_back(icon_cloudy);
@@ -46,7 +46,7 @@ void Screen::UpdateEntireScreen()
 
     for (int i = 0; i <= 5; i++)
     {
-        this->DisplayStationStatus(this->wateringStations[i]->GetNumber(), this->wateringStations[i]->IsWatering());
+        this->DisplayStationStatus(i + 1, this->stationManager->IsWatering(i));
     }
 
     this->display.display();

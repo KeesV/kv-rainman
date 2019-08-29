@@ -6,7 +6,7 @@
 #include <Adafruit_SSD1306.h>
 #include <pgmspace.h>
 
-#include "wateringStation.h"
+#include "wateringStationManager.h"
 #include "weather_icons.h"
 #include "status_icons.h"
 #include "rainmanStatus.h"
@@ -19,12 +19,12 @@ class Screen
 {
 public:
     Screen();
-    void Start(RainmanStatus *status, std::vector<WateringStation *> stations);
+    void Start(RainmanStatus *status, WateringStationManager *stationManager);
     void Handle();
 
 private:
     RainmanStatus *status;
-    std::vector<WateringStation *> wateringStations;
+    WateringStationManager *stationManager;
     Adafruit_SSD1306 display;
     void DisplayStationStatus(int stationNumber, bool status);
     void DisplayWeather();
