@@ -21,7 +21,7 @@ void WateringStationManager::Setup()
     pinMode(LOADPIN, OUTPUT);
     pinMode(CLOCKPIN, OUTPUT);
     this->SetData();
-    Serial.print("Initialized watering station manager");
+    Serial.println("Initialized watering station manager");
 }
 
 void WateringStationManager::SetData()
@@ -53,4 +53,16 @@ void WateringStationManager::StopWatering(int stationNumber)
     // Simple implementation that will just stop watering all stations
     this->wateringStationStatus = B11111111;
     this->SetData();
+}
+
+void WateringStationManager::ToggleWatering(int stationNumber)
+{
+    if (IsWatering(stationNumber))
+    {
+        StopWatering(stationNumber);
+    }
+    else
+    {
+        StartWatering(stationNumber);
+    }
 }

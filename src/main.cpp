@@ -4,6 +4,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "wateringStationManager.h"
+#include "inputButtonManager.h"
 #include "mqttClient.h"
 #include "rainmanStatus.h"
 
@@ -15,6 +16,7 @@ Screen screen;
 MqttClient mqttClient;
 RainmanStatus status;
 WateringStationManager stationManager;
+InputButtonManager buttonManager;
 
 void setup()
 {
@@ -22,6 +24,7 @@ void setup()
     settings.Begin();
 
     stationManager.Setup();
+    buttonManager.Setup(&stationManager);
 
     screen.Start(&status, &stationManager);
 
@@ -68,6 +71,8 @@ void loop()
     handle_webserver();
     yield();
     mqttClient.Handle();
+    yield();
+    buttonManager.Handle();
     yield();
     screen.Handle();
     yield();

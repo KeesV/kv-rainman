@@ -19,6 +19,7 @@ public:
     bool IsWatering(int stationNumber);
     void StartWatering(int stationNumber);
     void StopWatering(int stationNumber);
+    void ToggleWatering(int stationNumber);
 };
 
 #endif
